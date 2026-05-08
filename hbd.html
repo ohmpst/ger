@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:'Segoe UI',sans-serif; }
@@ -127,6 +128,56 @@
   .replay-btn:hover{border-color:#FFD700;color:#FFD700}
 
   .photo-error { width:130px; height:130px; border-radius:50%; background:#FFD700; display:flex; align-items:center; justify-content:center; font-size:50px; border:4px solid #FFD700; box-shadow:0 0 20px rgba(255,215,0,.6),0 0 0 3px #ff0000; }
+
+  /* ===== MOBILE RESPONSIVE ===== */
+  @media (max-width: 480px) {
+    #game-screen { min-height: 100dvh; padding: 20px; }
+
+    .roblox-logo { font-size: 36px; margin-bottom: 8px; }
+    .game-title { font-size: 14px; margin-bottom: 18px; letter-spacing: 1px; }
+
+    #roblox-char { width: 70px; height: 86px; }
+    .nameplate { font-size: 12px; padding: 2px 8px; }
+
+    .play-btn { padding: 14px 36px; font-size: 18px; }
+    .hint { font-size: 12px; margin-top: 12px; }
+
+    #card-screen { min-height: 100dvh; }
+    .card-inner { padding: 16px 16px 16px; }
+
+    .birthday-title { font-size: 24px; letter-spacing: 2px; margin-bottom: 2px; }
+    .name-text { font-size: 20px; margin-bottom: 4px; }
+
+    .age-badge { font-size: 52px; width: 90px; height: 90px; margin: 6px auto; }
+    .age-badge::after { font-size: 13px; bottom: 10px; }
+
+    .photo-frame img { width: 105px; height: 105px; }
+    .photo-error { width: 105px; height: 105px; font-size: 40px; }
+    .photo-crown { font-size: 22px; top: -14px; }
+
+    #card-char { width: 58px; height: 72px; }
+    .card-nameplate { font-size: 11px; }
+
+    .wish-text { font-size: 13px; line-height: 1.65; margin: 6px auto 10px; }
+
+    .mini-game { padding: 10px 12px; }
+    .mini-game h3 { font-size: 12px; }
+    .block { width: 40px; height: 40px; font-size: 18px; }
+    .blocks-area { gap: 6px; }
+    .score-text { font-size: 12px; }
+
+    .from-text { font-size: 12px; }
+    .replay-btn { font-size: 12px; padding: 6px 14px; }
+
+    #music-btn { width: 36px; height: 36px; font-size: 16px; top: 8px; right: 8px; }
+  }
+
+  @media (max-width: 360px) {
+    .roblox-logo { font-size: 30px; }
+    .birthday-title { font-size: 20px; }
+    .age-badge { font-size: 44px; width: 80px; height: 80px; }
+    .block { width: 36px; height: 36px; font-size: 16px; }
+  }
 </style>
 </head>
 <body>
