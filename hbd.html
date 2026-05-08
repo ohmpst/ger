@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI',sans-serif; }
+
+  #game-screen {
+    background:#1a1a2e; min-height:520px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    position:relative; overflow:hidden; cursor:pointer; user-select:none;
+  }
+  .star { position:absolute; background:white; border-radius:50%; animation:twinkle 2s infinite alternate; }
+  @keyframes twinkle { from{opacity:.2} to{opacity:1} }
+
+  .roblox-logo {
+    font-size:52px; font-weight:900; color:#ff0000;
+    letter-spacing:-2px; text-shadow:4px 4px 0 #8b0000;
+    margin-bottom:12px; animation:bounce 1s ease-in-out infinite alternate;
+  }
+  @keyframes bounce { from{transform:translateY(0)} to{transform:translateY(-10px)} }
+
+  .char-wrap { position:relative; display:flex; flex-direction:column; align-items:center; margin-bottom:10px; cursor:pointer; }
+  .nameplate {
+    background:rgba(0,0,0,.75); color:#FFD700; font-size:13px; font-weight:700;
+    padding:3px 10px; border-radius:20px; border:1.5px solid #FFD700;
+    margin-bottom:6px; animation:float-plate 2s ease-in-out infinite alternate; white-space:nowrap;
+  }
+  @keyframes float-plate { from{transform:translateY(0)} to{transform:translateY(-5px)} }
+
+  #roblox-char { width:90px; height:110px; transition:transform .1s; image-rendering:pixelated; }
+  .char-wrap.jumping #roblox-char { animation:jump-up .55s cubic-bezier(.33,1,.68,1) forwards; }
+  @keyframes jump-up {
+    0%{transform:translateY(0) scaleX(1)}
+    15%{transform:translateY(0) scaleX(.85) scaleY(1.1)}
+    50%{transform:translateY(-70px) scaleX(1) scaleY(1)}
+    85%{transform:translateY(-70px) scaleX(1) scaleY(1)}
+    92%{transform:translateY(4px) scaleX(1.1) scaleY(.88)}
+    100%{transform:translateY(0) scaleX(1) scaleY(1)}
+  }
+  .char-wrap.dancing #roblox-char { animation:dance .5s ease-in-out infinite alternate; }
+  @keyframes dance { from{transform:rotate(-8deg) translateY(0)} to{transform:rotate(8deg) translateY(-4px)} }
+
+  .sparkle { position:absolute; pointer-events:none; font-size:18px; animation:spark-fly .7s ease-out forwards; z-index:20; }
+  @keyframes spark-fly {
+    0%{opacity:1;transform:translate(0,0) scale(1)}
+    100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.3)}
+  }
+
+  .game-title { color:#fff; font-size:18px; font-weight:700; letter-spacing:2px; text-transform:uppercase; margin-bottom:24px; }
+  .play-btn {
+    background:#ff0000; color:white; border:none; padding:16px 48px;
+    font-size:22px; font-weight:900; border-radius:8px; cursor:pointer;
+    box-shadow:0 6px 0 #8b0000; letter-spacing:2px; text-transform:uppercase;
+    transition:all .1s; position:relative; z-index:10;
+    animation:glow-btn 1.5s ease-in-out infinite alternate;
+  }
+  @keyframes glow-btn {
+    from{box-shadow:0 6px 0 #8b0000,0 0 10px rgba(255,0,0,.3)}
+    to{box-shadow:0 6px 0 #8b0000,0 0 25px rgba(255,0,0,.8)}
+  }
+  .play-btn:hover{transform:translateY(3px);box-shadow:0 3px 0 #8b0000}
+  .play-btn:active{transform:translateY(6px);box-shadow:none}
+  .hint { color:#aaa; font-size:13px; margin-top:16px; animation:fade-hint 2s ease-in-out infinite alternate; }
+  @keyframes fade-hint { from{opacity:.4} to{opacity:1} }
+
+  /* CARD */
+  #card-screen { display:none; min-height:520px; background:linear-gradient(135deg,#0f3460,#16213e,#1a1a2e); position:relative; overflow:hidden; }
+  .confetti-piece { position:absolute; width:10px; height:10px; border-radius:2px; animation:fall linear infinite; }
+  @keyframes fall {
+    0%{transform:translateY(-20px) rotate(0deg);opacity:1}
+    100%{transform:translateY(560px) rotate(720deg);opacity:0}
+  }
+  .card-inner { position:relative; z-index:10; display:flex; flex-direction:column; align-items:center; padding:24px 24px 20px; text-align:center; }
+  .birthday-title {
+    font-size:34px; font-weight:900; color:#FFD700;
+    text-shadow:3px 3px 0 #b8860b,0 0 20px rgba(255,215,0,.5);
+    letter-spacing:3px; text-transform:uppercase; margin-bottom:4px;
+    animation:title-pop .6s cubic-bezier(.175,.885,.32,1.275) forwards;
+  }
+  @keyframes title-pop { from{transform:scale(0) rotate(-10deg);opacity:0} to{transform:scale(1) rotate(0);opacity:1} }
+  .name-text { font-size:26px; font-weight:900; color:#ff6b6b; text-shadow:2px 2px 0 #8b0000; margin-bottom:6px; animation:title-pop .6s .2s cubic-bezier(.175,.885,.32,1.275) both; }
+  .age-badge {
+    background:#ff0000; color:white; font-size:68px; font-weight:900;
+    width:115px; height:115px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 8px 0 #8b0000,0 0 30px rgba(255,0,0,.5);
+    margin:8px auto; position:relative;
+    animation:age-bounce .8s .4s cubic-bezier(.175,.885,.32,1.275) both;
+  }
+  .age-badge::after { content:'ขวบ'; position:absolute; bottom:14px; font-size:16px; font-weight:700; color:#ffd; }
+  @keyframes age-bounce { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+
+  .photo-frame { position:relative; margin:8px auto; animation:title-pop .6s .5s cubic-bezier(.175,.885,.32,1.275) both; cursor:pointer; }
+  .photo-frame img {
+    width:130px; height:130px; border-radius:50%; object-fit:cover;
+    border:4px solid #FFD700;
+    box-shadow:0 0 20px rgba(255,215,0,.6),0 0 0 3px #ff0000;
+    transition:transform .3s;
+  }
+  .photo-frame:hover img { transform:scale(1.05); }
+  .photo-crown { position:absolute; top:-18px; left:50%; transform:translateX(-50%); font-size:28px; animation:float-plate 1.5s ease-in-out infinite alternate; }
+
+  .card-char-wrap { position:relative; display:flex; flex-direction:column; align-items:center; margin:4px 0; cursor:pointer; }
+  .card-nameplate { background:rgba(0,0,0,.75); color:#FFD700; font-size:12px; font-weight:700; padding:2px 9px; border-radius:20px; border:1.5px solid #FFD700; margin-bottom:4px; animation:float-plate 2s ease-in-out infinite alternate; }
+  #card-char { width:72px; height:90px; image-rendering:pixelated; }
+  .card-char-wrap.jumping #card-char { animation:jump-up .55s cubic-bezier(.33,1,.68,1) forwards; }
+  .card-char-wrap.dancing #card-char { animation:dance .5s ease-in-out infinite alternate; }
+
+  .wish-text { color:#e0e0ff; font-size:15px; line-height:1.7; max-width:400px; margin:8px auto 12px; animation:fade-in .8s .8s both; text-shadow:0 1px 4px rgba(0,0,0,.5); }
+  @keyframes fade-in { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+  .mini-game { background:rgba(255,255,255,.07); border:2px solid rgba(255,255,255,.15); border-radius:12px; padding:12px 18px; width:100%; max-width:400px; margin:0 auto; animation:fade-in .8s 1s both; }
+  .mini-game h3 { color:#FFD700; font-size:13px; font-weight:700; letter-spacing:1px; margin-bottom:10px; text-transform:uppercase; }
+  .blocks-area { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; min-height:56px; }
+  .block { width:46px; height:46px; border-radius:6px; border:2px solid rgba(255,255,255,.3); font-size:20px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .15s; animation:block-appear .3s cubic-bezier(.175,.885,.32,1.275) both; }
+  .block:hover{transform:scale(1.15);border-color:#FFD700}
+  .block:active{transform:scale(.9)}
+  .block.popped{animation:block-pop .3s forwards;pointer-events:none}
+  @keyframes block-appear { from{transform:scale(0) rotate(30deg);opacity:0} to{transform:scale(1) rotate(0);opacity:1} }
+  @keyframes block-pop { 0%{transform:scale(1);opacity:1} 50%{transform:scale(1.5) rotate(20deg)} 100%{transform:scale(0);opacity:0} }
+  .score-text { color:#aaa; font-size:13px; margin-top:8px; text-align:center; }
+  .score-val { color:#FFD700; font-weight:700; }
+  .from-text { color:#88aaff; font-size:13px; font-style:italic; margin-top:10px; animation:fade-in .8s 1.2s both; }
+  .replay-btn { background:transparent; border:1.5px solid rgba(255,255,255,.3); color:#ccc; padding:7px 18px; border-radius:20px; font-size:13px; cursor:pointer; margin-top:8px; transition:all .2s; }
+  .replay-btn:hover{border-color:#FFD700;color:#FFD700}
+
+  .photo-error { width:130px; height:130px; border-radius:50%; background:#FFD700; display:flex; align-items:center; justify-content:center; font-size:50px; border:4px solid #FFD700; box-shadow:0 0 20px rgba(255,215,0,.6),0 0 0 3px #ff0000; }
+</style>
+</head>
+<body>
+
+<!-- AUDIO -->
+<audio id="bg-music" loop>
+  <source src="song.mp3" type="audio/mpeg">
+</audio>
+<audio id="bonus-music">
+  <source src="ms.mp3" type="audio/mpeg">
+</audio>
+<div id="music-btn" onclick="toggleMusic()" style="
+  position:fixed;top:12px;right:12px;z-index:9999;
+  background:rgba(0,0,0,.6);border:1.5px solid #FFD700;
+  color:#FFD700;font-size:18px;width:40px;height:40px;
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .2s;user-select:none;
+  box-shadow:0 0 10px rgba(255,215,0,.3);
+" title="เปิด/ปิดเพลง">🎵</div>
+
+<!-- GAME SCREEN -->
+<div id="game-screen" onclick="openCard()">
+  <div class="roblox-logo">ROBLOX</div>
+  <div class="char-wrap" id="title-char-wrap" onclick="event.stopPropagation();handleCharClick('title')">
+    <div class="nameplate">เกอร์ 🎮</div>
+    <svg id="roblox-char" viewBox="0 0 90 110" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="45" cy="106" rx="20" ry="4" fill="rgba(0,0,0,0.3)"/>
+      <rect x="28" y="76" width="14" height="28" rx="3" fill="#1565c0"/>
+      <rect x="48" y="76" width="14" height="28" rx="3" fill="#1565c0"/>
+      <rect x="25" y="98" width="18" height="10" rx="3" fill="#111"/>
+      <rect x="47" y="98" width="18" height="10" rx="3" fill="#111"/>
+      <rect x="22" y="44" width="46" height="36" rx="4" fill="#e53935"/>
+      <rect x="30" y="53" width="30" height="10" rx="2" fill="#b71c1c"/>
+      <text x="45" y="62" text-anchor="middle" font-size="7" font-weight="900" fill="white" font-family="Arial">ROBLOX</text>
+      <rect x="5" y="44" width="16" height="30" rx="4" fill="#e53935"/>
+      <rect x="69" y="44" width="16" height="30" rx="4" fill="#e53935"/>
+      <rect x="4" y="72" width="18" height="12" rx="5" fill="#FFCC80"/>
+      <rect x="68" y="72" width="18" height="12" rx="5" fill="#FFCC80"/>
+      <rect x="38" y="36" width="14" height="10" rx="2" fill="#FFCC80"/>
+      <rect x="18" y="6" width="54" height="50" rx="6" fill="#FFCC80"/>
+      <rect x="28" y="22" width="13" height="14" rx="3" fill="white"/>
+      <rect x="49" y="22" width="13" height="14" rx="3" fill="white"/>
+      <rect x="32" y="25" width="7" height="8" rx="2" fill="#111"/>
+      <rect x="53" y="25" width="7" height="8" rx="2" fill="#111"/>
+      <circle cx="34" cy="26" r="2" fill="white"/>
+      <circle cx="55" cy="26" r="2" fill="white"/>
+      <path d="M32 43 Q45 53 58 43" stroke="#c0392b" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <rect x="18" y="6" width="54" height="14" rx="6" fill="#1a237e"/>
+      <rect x="13" y="13" width="10" height="8" rx="2" fill="#1a237e"/>
+      <rect x="67" y="13" width="10" height="8" rx="2" fill="#1a237e"/>
+    </svg>
+  </div>
+  <div class="game-title">Birthday Special Edition</div>
+  <button class="play-btn" onclick="event.stopPropagation();openCard()">▶ PLAY</button>
+  <p class="hint">กดเพื่อเปิดเซอร์ไพรส์! หรือกดตัวละครให้เต้น 🕺</p>
+</div>
+
+<!-- CARD SCREEN -->
+<div id="card-screen">
+  <div class="card-inner">
+    <div class="birthday-title">🎂 Happy Birthday 🎂</div>
+    <div class="name-text">น้องชาย!</div>
+    <div class="age-badge">6</div>
+
+    <div class="photo-frame">
+      <div class="photo-crown">👑</div>
+      <img id="birthday-photo" src="file:///D:/github/ger/image/1778252837144.jpg" alt="น้องชาย" onerror="this.outerHTML='<div class=\'photo-error\'>🎂</div>'" />
+    </div>
+
+    <div class="card-char-wrap" id="card-char-wrap" onclick="handleCharClick('card')">
+      <div class="card-nameplate">เกอร์ 🎮</div>
+      <svg id="card-char" viewBox="0 0 90 110" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="45" cy="106" rx="20" ry="4" fill="rgba(0,0,0,0.3)"/>
+        <rect x="28" y="76" width="14" height="28" rx="3" fill="#1565c0"/>
+        <rect x="48" y="76" width="14" height="28" rx="3" fill="#1565c0"/>
+        <rect x="25" y="98" width="18" height="10" rx="3" fill="#111"/>
+        <rect x="47" y="98" width="18" height="10" rx="3" fill="#111"/>
+        <rect x="22" y="44" width="46" height="36" rx="4" fill="#e53935"/>
+        <rect x="30" y="53" width="30" height="10" rx="2" fill="#b71c1c"/>
+        <text x="45" y="62" text-anchor="middle" font-size="7" font-weight="900" fill="white" font-family="Arial">ROBLOX</text>
+        <rect x="5" y="44" width="16" height="30" rx="4" fill="#e53935"/>
+        <rect x="69" y="44" width="16" height="30" rx="4" fill="#e53935"/>
+        <rect x="4" y="72" width="18" height="12" rx="5" fill="#FFCC80"/>
+        <rect x="68" y="72" width="18" height="12" rx="5" fill="#FFCC80"/>
+        <rect x="38" y="36" width="14" height="10" rx="2" fill="#FFCC80"/>
+        <rect x="18" y="6" width="54" height="50" rx="6" fill="#FFCC80"/>
+        <rect x="28" y="22" width="13" height="14" rx="3" fill="white"/>
+        <rect x="49" y="22" width="13" height="14" rx="3" fill="white"/>
+        <rect x="32" y="25" width="7" height="8" rx="2" fill="#111"/>
+        <rect x="53" y="25" width="7" height="8" rx="2" fill="#111"/>
+        <circle cx="34" cy="26" r="2" fill="white"/>
+        <circle cx="55" cy="26" r="2" fill="white"/>
+        <path d="M32 43 Q45 53 58 43" stroke="#c0392b" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <rect x="18" y="6" width="54" height="14" rx="6" fill="#1a237e"/>
+        <rect x="13" y="13" width="10" height="8" rx="2" fill="#1a237e"/>
+        <rect x="67" y="13" width="10" height="8" rx="2" fill="#1a237e"/>
+      </svg>
+    </div>
+
+    <p class="wish-text">
+      ขอให้น้องมีวันเกิดสุดแฮปปี้นะ!<br>
+      ขอให้เล่น Roblox สนุกทุกวัน<br>
+      โตขึ้นเป็นคนเก่ง ร่างกายแข็งแรง<br>
+      และมีความสุขมาก ๆ ตลอดปีนี้เลยนะ 💙
+    </p>
+
+    <div class="mini-game">
+      <h3>🎮 กดทำลายบล็อกให้หมด!</h3>
+      <div class="blocks-area" id="blocks"></div>
+      <div class="score-text">ทำลายแล้ว: <span class="score-val" id="score">0</span> / <span id="total">0</span> บล็อก</div>
+    </div>
+
+    <p class="from-text">ด้วยรัก จากพี่ ❤️</p>
+    <button class="replay-btn" onclick="resetGame()">🔄 เล่นใหม่</button>
+  </div>
+</div>
+
+<script>
+  // Music
+  let musicPlaying = false;
+  const music = document.getElementById('bg-music');
+  const musicBtn = document.getElementById('music-btn');
+
+  function toggleMusic(){
+    if(musicPlaying){ music.pause(); musicBtn.textContent='🔇'; musicPlaying=false; }
+    else { music.play().catch(()=>{}); musicBtn.textContent='🎵'; musicPlaying=true; }
+  }
+
+  // Auto-play on first interaction
+  document.addEventListener('click', function startMusic(){
+    if(!musicPlaying){ music.play().then(()=>{ musicPlaying=true; musicBtn.textContent='🎵'; }).catch(()=>{}); }
+    document.removeEventListener('click', startMusic);
+  }, {once:true});
+
+  // Stars
+  const gs = document.getElementById('game-screen');
+  for(let i=0;i<40;i++){
+    const s=document.createElement('div'); s.className='star';
+    const sz=Math.random()*3+1;
+    s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-delay:${Math.random()*2}s;animation-duration:${1+Math.random()*2}s`;
+    gs.appendChild(s);
+  }
+
+  const charState={title:'idle',card:'idle'};
+  function handleCharClick(which){
+    const wrap=document.getElementById(which==='title'?'title-char-wrap':'card-char-wrap');
+    const state=charState[which];
+    if(state==='idle'){
+      charState[which]='jumping'; wrap.classList.add('jumping'); spawnSparkles(wrap);
+      setTimeout(()=>{ wrap.classList.remove('jumping'); charState[which]='dancing'; wrap.classList.add('dancing'); },560);
+    } else if(state==='dancing'){
+      charState[which]='idle'; wrap.classList.remove('dancing');
+    }
+  }
+
+  const sparkEmojis=['✨','⭐','💥','🌟','🎉','💫','🔥'];
+  function spawnSparkles(wrap){
+    for(let i=0;i<8;i++){
+      const sp=document.createElement('div'); sp.className='sparkle';
+      sp.textContent=sparkEmojis[Math.floor(Math.random()*sparkEmojis.length)];
+      const angle=(i/8)*360, dist=55+Math.random()*30, rad=angle*Math.PI/180;
+      sp.style.setProperty('--dx',`${Math.cos(rad)*dist}px`);
+      sp.style.setProperty('--dy',`${Math.sin(rad)*dist-40}px`);
+      sp.style.left='50%'; sp.style.top='60%';
+      sp.style.animationDelay=(Math.random()*.15)+'s';
+      wrap.appendChild(sp); setTimeout(()=>sp.remove(),900);
+    }
+  }
+
+  function openCard(){
+    document.getElementById('game-screen').style.display='none';
+    const cs=document.getElementById('card-screen'); cs.style.display='block';
+    spawnConfetti(); spawnBlocks();
+    setTimeout(()=>{
+      if(charState.card==='idle'){ charState.card='dancing'; document.getElementById('card-char-wrap').classList.add('dancing'); }
+    },1200);
+  }
+
+  function spawnConfetti(){
+    const colors=['#ff0000','#FFD700','#00ff88','#4fc3f7','#ff6b6b','#a855f7','#f97316'];
+    const cs=document.getElementById('card-screen');
+    for(let i=0;i<35;i++){
+      const c=document.createElement('div'); c.className='confetti-piece';
+      c.style.cssText=`left:${Math.random()*100}%;top:-10px;background:${colors[i%colors.length]};animation-duration:${2+Math.random()*3}s;animation-delay:${Math.random()*2}s;transform:rotate(${Math.random()*360}deg)`;
+      cs.appendChild(c);
+    }
+  }
+
+  const emojis=['🧱','⚔️','🛡️','🌟','💎','🚀','🏆','🎯','🔥','💰'];
+  const blockColors=['#e53935','#1565c0','#2e7d32','#f9a825','#6a1b9a','#00838f'];
+  let score=0,totalBlocks=0;
+
+  function spawnBlocks(){
+    const area=document.getElementById('blocks'); area.innerHTML='';
+    score=0; totalBlocks=10;
+    document.getElementById('score').textContent='0';
+    document.getElementById('total').textContent=totalBlocks;
+    for(let i=0;i<totalBlocks;i++){
+      const b=document.createElement('div'); b.className='block';
+      b.style.background=blockColors[i%blockColors.length];
+      b.style.animationDelay=(i*.06)+'s';
+      b.textContent=emojis[i%emojis.length];
+      b.onclick=()=>popBlock(b); area.appendChild(b);
+    }
+  }
+
+  function popBlock(el){
+    el.classList.add('popped'); score++;
+    document.getElementById('score').textContent=score;
+    if(score===totalBlocks){
+      setTimeout(()=>{
+        document.getElementById('blocks').innerHTML='<div style="color:#FFD700;font-size:26px;text-align:center;padding:8px;animation:title-pop 0.5s both">🎉 เก่งมาก! Happy Birthday! 🎉</div>';
+        // สลับเพลง
+        music.pause();
+        const bm = document.getElementById('bonus-music');
+        bm.currentTime = 0;
+        bm.play().catch(()=>{});
+        musicBtn.textContent = '🎵';
+        showBonus();
+      },400);
+    }
+  }
+
+  function showBonus(){
+    const existing = document.getElementById('bonus-screen');
+    if(existing) { existing.style.display='flex'; return; }
+    const div = document.createElement('div');
+    div.id = 'bonus-screen';
+    div.style.cssText = `
+      position:fixed;top:0;left:0;width:100%;height:100%;
+      background:rgba(0,0,0,.88);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      z-index:999;cursor:pointer;animation:fade-in .5s both;
+    `;
+    div.innerHTML = `
+      <div style="color:#FFD700;font-size:22px;font-weight:900;letter-spacing:2px;margin-bottom:16px;text-shadow:0 0 20px #FFD700;animation:bounce 1s ease-in-out infinite alternate">
+        🏆 BONUS UNLOCKED! 🏆
+      </div>
+      <div style="position:relative;border:4px solid #FFD700;border-radius:16px;box-shadow:0 0 40px rgba(255,215,0,.6),0 0 0 3px #ff0000;overflow:hidden;max-width:90%;max-height:70vh;">
+        <img src="file:///D:/github/ger/image/2026-05-08_22-38-18_Lumina.png"
+          style="display:block;max-width:100%;max-height:70vh;object-fit:contain;"
+          onerror="this.outerHTML='<div style=\'color:#fff;padding:40px;font-size:40px;text-align:center\'>🎁<br><span style=\'font-size:16px\'>โหลดรูปไม่ได้<br>เปิดไฟล์ .html ในเครื่อง</span></div>'" />
+        <div style="position:absolute;top:8px;right:8px;font-size:22px;animation:float-plate 1.5s ease-in-out infinite alternate">⭐</div>
+      </div>
+      <div style="color:#aaa;font-size:13px;margin-top:14px;">แตะเพื่อปิด</div>
+    `;
+    div.onclick = () => div.style.display='none';
+    document.body.appendChild(div);
+  }
+
+  function resetGame(){
+    spawnBlocks();
+    const b=document.getElementById('bonus-screen'); if(b) b.style.display='none';
+    // กลับมาเล่นเพลงหลัก
+    const bm = document.getElementById('bonus-music');
+    bm.pause(); bm.currentTime=0;
+    if(musicPlaying){ music.play().catch(()=>{}); }
+  }
+</script>
+</body>
+</html>
